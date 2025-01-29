@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import abi from "../abi.json";
 import './App.css';
-import { BrowserProvider } from "ethers";
+
 
 const contractAddress = "0xFEBc0A5717cB2957e09Cb44ddD0E76Be45bF656B";
 const contractABI = abi;
