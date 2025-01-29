@@ -20,7 +20,7 @@ export default function TaskApp() {
     async function connectWallet() {
         if (window.ethereum) {
             try {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const provider = new ethers.providers.BrowserProvider(window.ethereum);
                 await provider.send("eth_requestAccounts", []);
                 const signer = provider.getSigner();
                 const userAccount = await signer.getAddress();
