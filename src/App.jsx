@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import abi from "../abi.json";
 import './App.css';
+import { BrowserProvider } from "ethers";
 
 const contractAddress = "0xFEBc0A5717cB2957e09Cb44ddD0E76Be45bF656B";
 const contractABI = abi;
@@ -20,15 +21,15 @@ export default function TaskApp() {
     async function connectWallet() {
         if (window.ethereum) {
             try {
-                const provider = new ethers.providers.BrowserProvider(window.ethereum);
+                const provider = new ethers.BrowserProvider(window.ethereum); // FIXED
                 await provider.send("eth_requestAccounts", []);
-                const signer = provider.getSigner();
+                const signer = await provider.getSigner();
                 const userAccount = await signer.getAddress();
                 setAccount(userAccount);
-
+    
                 const taskContract = new ethers.Contract(contractAddress, contractABI, signer);
                 setContract(taskContract);
-
+    
                 console.log("Wallet connected:", userAccount);
                 console.log("Contract:", taskContract);
             } catch (error) {
@@ -36,16 +37,6 @@ export default function TaskApp() {
             }
         } else {
             console.error("MetaMask is not installed");
-        }
-    }
-
-    async function fetchTasks(taskContract) {
-        if (!taskContract) return;
-        try {
-            const myTasks = await taskContract.getMyTask();
-            setTasks(myTasks);
-        } catch (error) {
-            console.error("Error fetching tasks:", error);
         }
     }
 
@@ -57,12 +48,10 @@ export default function TaskApp() {
 
         if (contract) {
             try {
-                const tx = await contract.addTask(taskTitle, taskText);
+                const tx = await contract.addTask(taskTitle, taskText, false);
                 await tx.wait();
                 console.log("Task added:", tx);
-                fetchTasks(contract);
-                setTaskTitle("");
-                setTaskText("");
+                fetchTasks(); // Fetch tasks again or update state
             } catch (error) {
                 console.error("Failed to add task:", error);
             }
@@ -75,12 +64,30 @@ export default function TaskApp() {
                 const tx = await contract.deleteTask(taskId);
                 await tx.wait();
                 console.log("Task deleted:", tx);
-                fetchTasks(contract);
+                fetchTasks(); // Fetch tasks again or update state
             } catch (error) {
                 console.error("Failed to delete task:", error);
             }
         }
     }
+
+    async function fetchTasks() {
+        if (contract) {
+            try {
+                const tasks = await contract.getMyTask();
+                setTasks(tasks);
+                console.log("Tasks fetched:", tasks);
+            } catch (error) {
+                console.error("Failed to fetch tasks:", error);
+            }
+        }
+    }
+
+    useEffect(() => {
+        if (contract) {
+            fetchTasks();
+        }
+    }, [contract]);
 
     return (
         <div className="container">
